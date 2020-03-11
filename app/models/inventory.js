@@ -7,6 +7,7 @@ const inventorySchema = new mongoose.Schema({
   },
   quantity: {
     type: Number,
+    min: 0,
     required: true
   },
   price: {
