@@ -27,6 +27,13 @@ const requireToken = passport.authenticate('bearer', { session: false })
 // instantiate a router (mini app that only handles routes)
 const router = express.Router()
 
+// Rerouting Functions
+
+const inventoryNames = req.body.inventory.names
+const patchInstead = () => {
+  router.patch('/inventories/:id', requireToken, removeBlanks, (req, res, next))
+}
+
 // INDEX
 // GET /inventories
 router.get('/inventories', requireToken, (req, res, next) => {
@@ -68,20 +75,31 @@ router.get('/inventories/:id', requireToken, (req, res, next) => {
 
 // CREATE
 // POST /inventories
-router.post('/inventories', requireToken, (req, res, next) => {
-  // set owner of new inventory to be current user
-  req.body.inventory.owner = req.user.id
+  router.post('/inventories', requireToken, (req, res, next) => {
+    // set owner of new inventory to be current user
+    req.body.inventory.owner = req.user.id
+    // Check to see if the item exists
 
-  Inventory.create(req.body.inventory)
-    // respond to succesful `create` with status 201 and JSON of new "inventory"
-    .then(inventory => {
-      res.status(201).json({ inventory: inventory.toObject() })
+    inventoryNames.find({name : inventoryNames.name}, function (err, docs) {
+      // If the item does exist continue to POST request
+      if (!inventorySchema.name) {
+        Inventory.create(req.body.inventory)
+        // respond to succesful `create` with status 201 and JSON of new "inventory"
+          .then(inventory => {
+            res.status(201).json({ inventory: inventory.toObject() })
+          })
+          // if an error occurs, pass it off to our error handler
+          // the error handler needs the error message and the `res` object so that it
+          // can send an error message back to the client
+          .catch(next)
+        }
+      // If the item exists, reroute to PATCH request
+      else {
+        return patchInstead()
+      }
     })
-    // if an error occurs, pass it off to our error handler
-    // the error handler needs the error message and the `res` object so that it
-    // can send an error message back to the client
-    .catch(next)
-})
+  })
+
 
 // UPDATE
 // PATCH /inventories/5a7db6c74d55bc51bdf39793
