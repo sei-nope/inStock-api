@@ -1,7 +1,7 @@
 // Express docs: http://expressjs.com/en/api.html
 const express = require('express')
 // Passport docs: http://www.passportjs.org/docs/
-// const passport = require('passport')
+const passport = require('passport')
 
 // pull in Mongoose model for inventory
 const Inventory = require('../models/inventory')
@@ -35,8 +35,15 @@ router.get('/inventories', requireToken, (req, res, next) => {
       // `inventories` will be an array of Mongoose documents
       // we want to convert each one to a POJO, so we use `.map` to
       // apply `.toObject` to each one
-      requireOwnership(req, inventories)
-      return inventories.map(inventory => inventory.toObject())
+      // requireOwnership(req, inventories)
+      const userId = req.user._id
+      console.log(userId)
+      //  check if the resource.owner is an object in case populate is being used
+      //  if it is, use the `_id` property and if not, just use its value
+      return inventories.filter(inventory => {
+        const owner = inventory.owner._id ? inventory.owner._id : inventory.owner
+        return userId.equals(owner)
+      })
     })
     // respond with status 200 and JSON of the inventories
     .then(inventories => res.status(200).json({ inventories: inventories }))
