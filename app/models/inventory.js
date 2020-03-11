@@ -14,12 +14,12 @@ const inventorySchema = new mongoose.Schema({
     type: Number,
     min: 0,
     required: true
-  },
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
   }
+  // owner: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: 'User',
+  //   required: true
+  // }
 }, {
   timestamps: true
 })
