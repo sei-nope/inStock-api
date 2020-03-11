@@ -7,10 +7,12 @@ const inventorySchema = new mongoose.Schema({
   },
   quantity: {
     type: Number,
+    min: [0, 'not enough in stock'],
     required: true
   },
   price: {
     type: Number,
+    min: 0,
     required: true
   }
   // owner: {
