@@ -3,7 +3,7 @@ const express = require('express')
 // Passport docs: http://www.passportjs.org/docs/
 // const passport = require('passport')
 
-// pull in Mongoose model for examples
+// pull in Mongoose model for inventory
 const Inventory = require('../models/inventory')
 
 // this is a collection of methods that help us detect situations when we need
@@ -17,7 +17,7 @@ const handle404 = customErrors.handle404
 // const requireOwnership = customErrors.requireOwnership
 
 // this is middleware that will remove blank fields from `req.body`, e.g.
-// { example: { title: '', text: 'foo' } } -> { example: { text: 'foo' } }
+// { inventory: { title: '', text: 'foo' } } -> { inventory: { text: 'foo' } }
 const removeBlanks = require('../../lib/remove_blank_fields')
 // passing this as a second argument to `router.<verb>` will make it
 // so that a token MUST be passed for that route to be available
@@ -28,43 +28,43 @@ const removeBlanks = require('../../lib/remove_blank_fields')
 const router = express.Router()
 
 // INDEX
-// GET /examples
-router.get('/examples', (req, res, next) => {
+// GET /inventories
+router.get('/inventories', (req, res, next) => {
   Inventory.find()
-    .then(examples => {
-      // `examples` will be an array of Mongoose documents
+    .then(inventories => {
+      // `inventories` will be an array of Mongoose documents
       // we want to convert each one to a POJO, so we use `.map` to
       // apply `.toObject` to each one
-      return examples.map(example => example.toObject())
+      return inventories.map(inventory => inventory.toObject())
     })
-    // respond with status 200 and JSON of the examples
-    .then(examples => res.status(200).json({ examples: examples }))
+    // respond with status 200 and JSON of the inventories
+    .then(inventories => res.status(200).json({ inventories: inventories }))
     // if an error occurs, pass it to the handler
     .catch(next)
 })
 
 // SHOW
-// GET /examples/5a7db6c74d55bc51bdf39793
-router.get('/examples/:id', (req, res, next) => {
+// GET /inventories/5a7db6c74d55bc51bdf39793
+router.get('/inventories/:id', (req, res, next) => {
   // req.params.id will be set based on the `:id` in the route
   Inventory.findById(req.params.id)
     .then(handle404)
-    // if `findById` is succesful, respond with 200 and "example" JSON
-    .then(example => res.status(200).json({ example: example.toObject() }))
+    // if `findById` is succesful, respond with 200 and "inventory" JSON
+    .then(inventory => res.status(200).json({ inventory: inventory.toObject() }))
     // if an error occurs, pass it to the handler
     .catch(next)
 })
 
 // CREATE
-// POST /examples
-router.post('/examples', (req, res, next) => {
-  // set owner of new example to be current user
-  req.body.example.owner = req.user.id
+// POST /inventories
+router.post('/inventories', (req, res, next) => {
+  // set owner of new inventory to be current user
+  // req.body.inventory.owner = req.user.id
 
-  Inventory.create(req.body.example)
-    // respond to succesful `create` with status 201 and JSON of new "example"
-    .then(example => {
-      res.status(201).json({ example: example.toObject() })
+  Inventory.create(req.body.inventory)
+    // respond to succesful `create` with status 201 and JSON of new "inventory"
+    .then(inventory => {
+      res.status(201).json({ inventory: inventory.toObject() })
     })
     // if an error occurs, pass it off to our error handler
     // the error handler needs the error message and the `res` object so that it
@@ -73,21 +73,21 @@ router.post('/examples', (req, res, next) => {
 })
 
 // UPDATE
-// PATCH /examples/5a7db6c74d55bc51bdf39793
-router.patch('/examples/:id', removeBlanks, (req, res, next) => {
+// PATCH /inventories/5a7db6c74d55bc51bdf39793
+router.patch('/inventories/:id', removeBlanks, (req, res, next) => {
   // if the client attempts to change the `owner` property by including a new
   // owner, prevent that by deleting that key/value pair
-  delete req.body.example.owner
+  // delete req.body.inventory.owner
 
   Inventory.findById(req.params.id)
     .then(handle404)
-    .then(example => {
+    .then(inventory => {
       // pass the `req` object and the Mongoose record to `requireOwnership`
       // it will throw an error if the current user isn't the owner
-      // requireOwnership(req, example)
+      // requireOwnership(req, inventory)
 
       // pass the result of Mongoose's `.update` to the next `.then`
-      return example.updateOne(req.body.example)
+      return inventory.updateOne(req.body.inventory)
     })
     // if that succeeded, return 204 and no JSON
     .then(() => res.sendStatus(204))
@@ -96,15 +96,15 @@ router.patch('/examples/:id', removeBlanks, (req, res, next) => {
 })
 
 // DESTROY
-// DELETE /examples/5a7db6c74d55bc51bdf39793
-router.delete('/examples/:id', (req, res, next) => {
+// DELETE /inventories/5a7db6c74d55bc51bdf39793
+router.delete('/inventories/:id', (req, res, next) => {
   Inventory.findById(req.params.id)
     .then(handle404)
-    .then(example => {
-      // throw an error if current user doesn't own `example`
-      // requireOwnership(req, example)
-      // delete the example ONLY IF the above didn't throw
-      example.deleteOne()
+    .then(inventory => {
+      // throw an error if current user doesn't own `inventory`
+      // requireOwnership(req, inventory)
+      // delete the inventory ONLY IF the above didn't throw
+      inventory.deleteOne()
     })
     // send back 204 and no content if the deletion succeeded
     .then(() => res.sendStatus(204))
