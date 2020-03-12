@@ -107,7 +107,7 @@ router.patch('/inventories/:id', requireToken, removeBlanks, (req, res, next) =>
       requireOwnership(req, inventory)
 
       // pass the result of Mongoose's `.update` to the next `.then`
-      return inventory.updateOne(req.body.inventory)
+      return inventory.updateOne(req.body.inventory, {runValidators: true})
     })
     // if that succeeded, return 204 and no JSON
     .then(() => res.sendStatus(204))
