@@ -75,31 +75,38 @@ router.get('/inventories/:id', requireToken, (req, res, next) => {
 
 // CREATE
 // POST /inventories
-  router.post('/inventories', requireToken, (req, res, next) => {
-    // set owner of new inventory to be current user
-    req.body.inventory.owner = req.user.id
-    // Check to see if the item exists
-
-    inventoryNames.find({name : inventoryNames.name}, function (err, docs) {
-      // If the item does exist continue to POST request
-      if (!inventorySchema.name) {
-        Inventory.create(req.body.inventory)
-        // respond to succesful `create` with status 201 and JSON of new "inventory"
-          .then(inventory => {
-            res.status(201).json({ inventory: inventory.toObject() })
-          })
-          // if an error occurs, pass it off to our error handler
-          // the error handler needs the error message and the `res` object so that it
-          // can send an error message back to the client
-          .catch(next)
+router.post('/inventories', requireToken, (req, res, next) => {
+  const inventoryName = req.body.inventory.name
+  // set owner of new inventory to be current user
+  req.body.inventory.owner = req.user.id
+  console.log(`user.id is ${req.user.id}`)
+  console.log(`user._id is ${req.user._id}`)
+  const userId = req.user._id
+  // Check to see if the item exists
+  Inventory.find({name: inventoryName})
+    .then(inventories => {
+      console.log(`array of inventories: \n${inventories}`)
+      if (inventories) {
+        const foundInventory = inventories.find(inventory => {
+          const owner = inventory.owner._id ? inventory.owner._id : inventory.owner
+          return userId.equals(owner)
+        })
+        if (foundInventory) {
+          console.log(`foundInventory's id: ${foundInventory.id}`)
+          console.log(req.body.inventory)
+          return Inventory.findOneAndUpdate({_id: foundInventory._id}, req.body.inventory, {new: true, runValidators: true})
+        } else {
+          return Inventory.create(req.body.inventory)
         }
-      // If the item exists, reroute to PATCH request
-      else {
-        return patchInstead()
+      } else {
+        console.log('did not find identical inventory name')
+        // If the item does not exist continue to POST request
+        return Inventory.create(req.body.inventory)
       }
     })
-  })
-
+    .then(inventory => res.sendStatus(201).json({ inventory: inventory.toObject() }))
+    .catch(next)
+})
 
 // UPDATE
 // PATCH /inventories/5a7db6c74d55bc51bdf39793
