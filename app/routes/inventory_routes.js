@@ -27,12 +27,6 @@ const requireToken = passport.authenticate('bearer', { session: false })
 // instantiate a router (mini app that only handles routes)
 const router = express.Router()
 
-// Rerouting Functions
-
-const inventoryNames = req.body.inventory.names
-const patchInstead = () => {
-  router.patch('/inventories/:id', requireToken, removeBlanks, (req, res, next))
-}
 
 // INDEX
 // GET /inventories
