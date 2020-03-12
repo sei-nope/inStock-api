@@ -30,23 +30,14 @@ const router = express.Router()
 // INDEX
 // GET /inventories
 router.get('/inventories', requireToken, (req, res, next) => {
-  Inventory.find()
-    .then(inventories => {
-      // `inventories` will be an array of Mongoose documents
-      // we want to convert each one to a POJO, so we use `.map` to
-      // apply `.toObject` to each one
-      // requireOwnership(req, inventories)
-      const userId = req.user._id
-      console.log(userId)
-      //  check if the resource.owner is an object in case populate is being used
-      //  if it is, use the `_id` property and if not, just use its value
-      return inventories.filter(inventory => {
-        const owner = inventory.owner._id ? inventory.owner._id : inventory.owner
-        return userId.equals(owner)
-      })
-    })
+  const userId = req.user._id
+  Inventory.find({owner: userId})
+    .sort({updatedAt: -1})
     // respond with status 200 and JSON of the inventories
-    .then(inventories => res.status(200).json({ inventories: inventories }))
+    .then(inventories => {
+      console.log(inventories)
+      res.status(200).json({ inventories: inventories })
+    })
     // if an error occurs, pass it to the handler
     .catch(next)
 })
