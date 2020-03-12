@@ -69,17 +69,35 @@ router.get('/inventories/:id', requireToken, (req, res, next) => {
 // CREATE
 // POST /inventories
 router.post('/inventories', requireToken, (req, res, next) => {
+  const inventoryName = req.body.inventory.name
   // set owner of new inventory to be current user
   req.body.inventory.owner = req.user.id
-
-  Inventory.create(req.body.inventory)
-    // respond to succesful `create` with status 201 and JSON of new "inventory"
-    .then(inventory => {
-      res.status(201).json({ inventory: inventory.toObject() })
+  console.log(`user.id is ${req.user.id}`)
+  console.log(`user._id is ${req.user._id}`)
+  const userId = req.user._id
+  // Check to see if the item exists
+  Inventory.find({name: inventoryName})
+    .then(inventories => {
+      console.log(`array of inventories: \n${inventories}`)
+      if (inventories) {
+        const foundInventory = inventories.find(inventory => {
+          const owner = inventory.owner._id ? inventory.owner._id : inventory.owner
+          return userId.equals(owner)
+        })
+        if (foundInventory) {
+          console.log(`foundInventory's id: ${foundInventory.id}`)
+          console.log(req.body.inventory)
+          return Inventory.findOneAndUpdate({_id: foundInventory._id}, req.body.inventory, {new: true, runValidators: true})
+        } else {
+          return Inventory.create(req.body.inventory)
+        }
+      } else {
+        console.log('did not find identical inventory name')
+        // If the item does not exist continue to POST request
+        return Inventory.create(req.body.inventory)
+      }
     })
-    // if an error occurs, pass it off to our error handler
-    // the error handler needs the error message and the `res` object so that it
-    // can send an error message back to the client
+    .then(inventory => res.sendStatus(201).json({ inventory: inventory.toObject() }))
     .catch(next)
 })
 
