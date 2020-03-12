@@ -88,7 +88,7 @@ router.post('/inventories', requireToken, (req, res, next) => {
         return Inventory.create(req.body.inventory)
       }
     })
-    .then(inventory => res.sendStatus(201).json({ inventory: inventory.toObject() }))
+    .then(inventory => res.status(201).json({ inventory: inventory.toObject() }))
     .catch(next)
 })
 
@@ -107,10 +107,10 @@ router.patch('/inventories/:id', requireToken, removeBlanks, (req, res, next) =>
       requireOwnership(req, inventory)
 
       // pass the result of Mongoose's `.update` to the next `.then`
-      return inventory.updateOne(req.body.inventory, {runValidators: true})
+      return Inventory.findOneAndUpdate({_id: req.params.id}, req.body.inventory, {new: true, runValidators: true})
     })
     // if that succeeded, return 204 and no JSON
-    .then(() => res.sendStatus(204))
+    .then(inventory => res.status(201).json({ inventory: inventory.toObject() }))
     // if an error occurs, pass it to the handler
     .catch(next)
 })
