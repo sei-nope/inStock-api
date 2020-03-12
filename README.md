@@ -7,4 +7,4 @@
 
 ## Set Up
 -`npm install` dependencies
--`npm run server` state express serve 
+-`npm run server` state express serve
