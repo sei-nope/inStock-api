@@ -43,13 +43,12 @@ router.get('/inventories', requireToken, (req, res, next) => {
 
 // SHOW
 // GET /inventories/5a7db6c74d55bc51bdf39793
-router.get('/inventories/:id', requireToken, (req, res, next) => {
+router.get('/inventories/:id', (req, res, next) => {
   // req.params.id will be set based on the `:id` in the route
   Inventory.findById(req.params.id)
     .then(handle404)
     // if `findById` is succesful, respond with 200 and "inventory" JSON
     .then(inventory => {
-      requireOwnership(req, inventory)
       res.status(200).json({ inventory: inventory.toObject() })
     })
     // if an error occurs, pass it to the handler
